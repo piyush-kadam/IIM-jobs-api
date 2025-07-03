@@ -1,8 +1,6 @@
 services:
   - type: web
-    name: iim-jobs
+    name: iim-jobs-api
     env: docker
     plan: free
     region: singapore
-    dockerfilePath: Dockerfile
-    autoDeploy: true

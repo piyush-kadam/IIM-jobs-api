@@ -13,22 +13,14 @@ sessions = {}
 def create_driver():
     options = uc.ChromeOptions()
     options.add_argument("--headless=new")
-    options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--no-sandbox")
-    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--disable-extensions")
-    options.add_argument("--disable-application-cache")
-    options.add_argument("--disable-dev-tools")
-    options.add_argument("--no-first-run")
-    options.add_argument("--window-size=1920,1080")
-    options.add_argument("--single-process")
+    options.add_argument("--disable-gpu")
+    options.binary_location = "/usr/bin/google-chrome"  # Required for Render
 
-    # Essential for low-RAM: disable zygote and sandboxing
-    options.add_argument("--no-zygote")
-
-    chrome_path = "/usr/bin/google-chrome"
-    driver = uc.Chrome(options=options, browser_executable_path=chrome_path)
+    driver = uc.Chrome(options=options, headless=True)
     return driver
 
 @app.route("/api/login", methods=["POST"])
