@@ -23,16 +23,20 @@ def create_driver():
     chrome_options.add_experimental_option('useAutomationExtension', False)
     chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
 
-    # Use local chromedriver from driver/ folder
+    # ✅ Point to the installed Chrome binary
+    chrome_options.binary_location = "/usr/bin/google-chrome"
+
+    # ✅ Point to your local chromedriver binary
     chrome_driver_path = os.path.join(os.getcwd(), "driver", "chromedriver")
     service = Service(chrome_driver_path)
 
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    # Anti-bot: Hide webdriver property
+    # ✅ Anti-bot trick
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
     
     return driver
+
 
 
 @app.route("/api/login", methods=["POST"])
