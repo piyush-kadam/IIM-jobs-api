@@ -11,8 +11,6 @@ app = Flask(__name__)
 sessions = {}
 def create_driver():
     options = uc.ChromeOptions()
-    options.binary_location = "/usr/bin/google-chrome"  # ✅ Important fix
-
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
@@ -24,7 +22,12 @@ def create_driver():
     options.add_argument("--remote-debugging-port=9222")
     options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
 
-    driver = uc.Chrome(options=options)
+    # ✅ Explicit path to Chrome browser executable
+    driver = uc.Chrome(
+        options=options,
+        browser_executable_path="/usr/bin/google-chrome"
+    )
+
     return driver
 
 @app.route("/api/login", methods=["POST"])
