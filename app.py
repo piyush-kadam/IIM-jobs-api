@@ -22,10 +22,9 @@ def create_driver():
     options.add_argument("--remote-debugging-port=9222")
     options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
 
-    # ✅ Explicit path to Chrome browser executable
     driver = uc.Chrome(
         options=options,
-        browser_executable_path="/usr/bin/google-chrome"
+        browser_executable_path="/usr/bin/google-chrome"  # ✅ Confirm path
     )
 
     return driver
