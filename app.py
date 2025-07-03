@@ -9,6 +9,7 @@ import re
 
 app = Flask(__name__)
 sessions = {}
+
 def create_driver():
     options = uc.ChromeOptions()
     options.add_argument("--headless=new")
@@ -22,9 +23,12 @@ def create_driver():
     options.add_argument("--remote-debugging-port=9222")
     options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
 
+    # ✅ Specify the path to Chrome explicitly
+    chrome_path = "/usr/bin/google-chrome"
+
     driver = uc.Chrome(
         options=options,
-        browser_executable_path="/usr/bin/google-chrome"  # ✅ Confirm path
+        browser_executable_path=chrome_path
     )
 
     return driver
