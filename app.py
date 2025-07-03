@@ -1,42 +1,27 @@
 from flask import Flask, request, jsonify
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import uuid
 import re
-import os
 
 app = Flask(__name__)
 sessions = {}
 
 def create_driver():
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    chrome_options.add_experimental_option('useAutomationExtension', False)
-    chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    options = uc.ChromeOptions()
+    options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
 
-    # ✅ Point to the installed Chrome binary
-    chrome_options.binary_location = "/usr/bin/google-chrome"
+    # ✅ `uc.Chrome()` will handle downloading & launching ChromeDriver
+    driver = uc.Chrome(options=options)
 
-    # ✅ Point to your local chromedriver binary
-    chrome_driver_path = os.path.join(os.getcwd(), "driver", "chromedriver")
-    service = Service(chrome_driver_path)
-
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-
-    # ✅ Anti-bot trick
-    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-    
     return driver
-
 
 
 @app.route("/api/login", methods=["POST"])
