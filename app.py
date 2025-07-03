@@ -14,6 +14,11 @@ import re
 app = Flask(__name__)
 sessions = {}
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+import os
+
 def create_driver():
     chrome_options = Options()
     chrome_options.add_argument("--headless")
@@ -23,11 +28,18 @@ def create_driver():
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     chrome_options.add_experimental_option('useAutomationExtension', False)
     chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-    
-    service = Service(ChromeDriverManager().install())
+
+    # Use local chromedriver from driver/ folder
+    chrome_driver_path = os.path.join(os.getcwd(), "driver", "chromedriver")
+    service = Service(chrome_driver_path)
+
     driver = webdriver.Chrome(service=service, options=chrome_options)
+
+    # Anti-bot: Hide webdriver property
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+    
     return driver
+
 
 @app.route("/api/login", methods=["POST"])
 def login():
