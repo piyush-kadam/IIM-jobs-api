@@ -1,6 +1,8 @@
 services:
   - type: web
-    name: iim-jobs-api
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    name: iim-jobs
+    env: docker
+    plan: free
+    region: singapore
+    dockerfilePath: Dockerfile
+    autoDeploy: true
