@@ -4,3 +4,4 @@ selenium==4.15.0
 python-dotenv
 requests
 undetected-chromedriver
+setuptools
