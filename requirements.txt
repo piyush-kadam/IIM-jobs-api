@@ -1,7 +1,5 @@
-flask==2.3.3
+Flask==2.3.3
 gunicorn
 selenium==4.15.0
-python-dotenv
-requests
 undetected-chromedriver
-setuptools
+requests

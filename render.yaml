@@ -1,6 +1,0 @@
-services:
-  - type: web
-    name: iim-jobs-api
-    env: docker
-    plan: free
-    region: singapore
