@@ -1131,6 +1131,11 @@ def save_job():
             "current_url": driver.current_url if driver else "unknown"
         }), 500
 
+@app.route("/")
+def home():
+    return "✅ IIMJobs API is running"
+
+
 if __name__ == "__main__":
     print("Flask server is starting...")
     app.run(debug=True, host='0.0.0.0', port=5000)
