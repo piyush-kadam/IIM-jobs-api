@@ -821,14 +821,12 @@ def safe_get_text(driver, selectors):
 
 @app.route("/api/apply-job", methods=["POST"])
 def apply_to_job():
-    """Apply to a job directly through the app and submit review"""
     data = request.json
     session_id = data.get("session_id")
     job_url = data.get("job_url")
 
     if not session_id or session_id not in sessions:
         return jsonify({"error": "Invalid session. Please login first."}), 403
-
     if not job_url:
         return jsonify({"error": "job_url is required"}), 400
 
@@ -836,12 +834,13 @@ def apply_to_job():
     driver = session_data["driver"]
 
     try:
-        wait = WebDriverWait(driver, 15)
+        wait = WebDriverWait(driver, 20)
 
-        # Navigate to job page
-        if driver.current_url != job_url:
-            driver.get(job_url)
-            time.sleep(3)
+        # Always reload the job URL
+        driver.get("about:blank")
+        time.sleep(1)
+        driver.get(job_url)
+        time.sleep(3)
 
         # Step 1: Click "Apply" button
         try:
@@ -860,28 +859,19 @@ def apply_to_job():
             form_marker = driver.find_element(By.XPATH, "//*[contains(text(),'Before you submit your application, tell the recruiter more about yourself')]")
             if form_marker:
                 form_questions = set()
-                try:
-                    form_blocks = driver.find_elements(By.XPATH, "//div[contains(@class, 'MuiBox-root')]")
-                    for block in form_blocks:
-                        try:
-                            text = block.text.strip()
-                            # Only keep blocks that seem like actual questions
-                            if (
-                                text
-                                and len(text.split()) > 3
-                                and "Submit" not in text
-                                and "Review" not in text
-                                and "Posted by" not in text
-                                and "Yrs" not in text
-                                and "Apply" not in text
-                                and not text.startswith("You are Applying")
-                            ):
-                                form_questions.add(text)
-                        except:
-                            continue
-                except:
-                    pass
-
+                form_blocks = driver.find_elements(By.XPATH, "//div[contains(@class, 'MuiBox-root')]")
+                for block in form_blocks:
+                    try:
+                        text = block.text.strip()
+                        if (
+                            text and len(text.split()) > 3 and
+                            "Submit" not in text and "Review" not in text and
+                            "Posted by" not in text and "Yrs" not in text and
+                            "Apply" not in text and not text.startswith("You are Applying")
+                        ):
+                            form_questions.add(text)
+                    except:
+                        continue
                 return jsonify({
                     "status": "form_present",
                     "message": "Form detected before review",
@@ -889,12 +879,14 @@ def apply_to_job():
                     "form_questions": list(form_questions)
                 }), 200
         except:
-            pass  # form marker not found
+            pass
 
-        # Step 3: Check if it's a review screen
+        # Step 3: Wait for review and submit
         try:
-            wait.until(EC.presence_of_element_located(
-                (By.XPATH, "//*[contains(text(),'Review your Application') or contains(text(),'You are Applying to') or contains(text(),'You’re applying to')]")))
+            wait.until(EC.presence_of_element_located((
+                By.XPATH,
+                "//*[contains(text(),'Review your Application') or contains(text(),'You are Applying to') or contains(text(),'You’re applying to')]"
+            )))
             return complete_review_and_submit(driver, wait)
         except:
             pass
@@ -913,7 +905,19 @@ def apply_to_job():
         }), 500
 
 def complete_review_and_submit(driver, wait):
-    time.sleep(2)
+    # Better than time.sleep
+    try:
+        wait.until(EC.element_to_be_clickable((
+            By.XPATH,
+            "//button[contains(text(),'Review & Submit') or contains(text(),'Submit') or contains(text(),'Send Application')]"
+        )))
+    except:
+        return jsonify({
+            "status": "partial_success",
+            "message": "Review page loaded but submit button not clickable",
+            "current_url": driver.current_url,
+            "review_data": {}
+        }), 206
 
     def safe_text(xpath):
         try:
@@ -931,25 +935,30 @@ def complete_review_and_submit(driver, wait):
     }
 
     try:
-        submit_button = wait.until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "//button[contains(text(),'Review & Submit') or contains(text(),'Submit') or contains(text(),'Send Application')]")))
+        submit_button = driver.find_element(By.XPATH, "//button[contains(text(),'Review & Submit') or contains(text(),'Submit') or contains(text(),'Send Application')]")
         if submit_button.is_displayed() and submit_button.is_enabled():
             driver.execute_script("arguments[0].click();", submit_button)
             time.sleep(2)
-            submitted = True
+            return jsonify({
+                "status": "success",
+                "message": "Application submitted and review submitted",
+                "current_url": driver.current_url,
+                "review_data": review_data
+            }), 200
         else:
-            submitted = False
+            return jsonify({
+                "status": "partial_success",
+                "message": "Review page loaded but not submitted",
+                "current_url": driver.current_url,
+                "review_data": review_data
+            }), 206
     except Exception as e:
-        print(f"Submit button not found: {e}")
-        submitted = False
-
-    return jsonify({
-        "status": "success" if submitted else "partial_success",
-        "message": "Application submitted and review submitted" if submitted else "Review page loaded but not submitted",
-        "current_url": driver.current_url,
-        "review_data": review_data
-    }), 200 if submitted else 206
+        return jsonify({
+            "status": "partial_success",
+            "message": f"Submit button not found: {str(e)}",
+            "current_url": driver.current_url,
+            "review_data": review_data
+        }), 206
 
 @app.route("/api/fill-form", methods=["POST"])
 def submit_form_answers():
